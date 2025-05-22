@@ -354,7 +354,7 @@ const CalendarList = (props: CalendarListProps & ContextProp, ref: any) => {
         renderItem={renderItem}
         getItemLayout={getItemLayout}
         initialNumToRender={range.current}
-        initialScrollIndex={initialDateIndex - 1}
+        initialScrollIndex={initialDateIndex}
         viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
         testID={`${testID}.list`}
         onLayout={onLayout}
