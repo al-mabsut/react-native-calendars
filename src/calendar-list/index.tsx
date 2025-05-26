@@ -46,6 +46,10 @@ export interface CalendarListProps extends CalendarProps, Omit<FlatListProps<any
    * of the CalendarList's ItemSeparatorComponent and its vertical margins.
    */
   itemLayoutOffset?: number;
+  /**  */
+  numberOfItemsInSnapToInterval?: number | undefined;
+  /**  */
+  decelerationRate?: number | 'normal' | 'fast' | undefined;
 }
 
 export interface CalendarListImperativeMethods {
@@ -95,6 +99,8 @@ const CalendarList = (props: CalendarListProps & ContextProp, ref: any) => {
     removeClippedSubviews,
     /** ScrollView props */
     horizontal = false,
+    numberOfItemsInSnapToInterval,
+    decelerationRate,
     pagingEnabled,
     scrollEnabled = true,
     nestedScrollEnabled = true,
@@ -359,6 +365,10 @@ const CalendarList = (props: CalendarListProps & ContextProp, ref: any) => {
         testID={`${testID}.list`}
         onLayout={onLayout}
         removeClippedSubviews={removeClippedSubviews}
+        {...(numberOfItemsInSnapToInterval !== undefined
+          ? {snapToInterval: calendarHeight * numberOfItemsInSnapToInterval}
+          : {})}
+        {...(decelerationRate !== undefined ? {decelerationRate: decelerationRate} : {})}
         pagingEnabled={pagingEnabled}
         scrollEnabled={scrollEnabled}
         scrollsToTop={scrollsToTop}

@@ -48,6 +48,16 @@ export interface MarkingProps extends DotProps {
   customTextStyle?: StyleProp<TextStyle>;
   customContainerStyle?: StyleProp<ViewStyle>;
   dotColor?: string;
+  // START: New properties for border customization and overlapping period handling
+  borderWith?: number;
+  borderRadius?: number;
+  borderColor?: string;
+  isMultiPeriod?: boolean;
+  startPeriodColor?: string;
+  endPeriodColor?: string;
+  startPeriodBorderColor?: string;
+  endPeriodBorderColor?: string;
+  // END: New properties for border customization and overlapping period handling
   //multi-dot
   dots?: DOT[];
   //multi-period
@@ -104,7 +114,7 @@ const Marking = (props: MarkingProps) => {
     if (endingDay) {
       styles.push(style.current.endingDay);
     }
-    return <View key={index} style={styles}/>;
+    return <View key={index} style={styles} />;
   };
 
   const renderDot = (index?: number, item?: any) => {
@@ -119,7 +129,7 @@ const Marking = (props: MarkingProps) => {
       color = selected && item.selectedDotColor ? item.selectedDotColor : item.color;
     }
 
-    return <Dot {...dotProps} key={key} color={color}/>;
+    return <Dot {...dotProps} key={key} color={color} />;
   };
 
   return renderMarkingByType();
