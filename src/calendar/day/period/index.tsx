@@ -8,7 +8,8 @@ import {
   ViewStyle,
   ViewProps,
   TextStyle,
-  StyleProp
+  StyleProp,
+  ColorValue
 } from 'react-native';
 import {xdateToData} from '../../../interface';
 import {Theme, DayState, DateData} from '../../../types';
@@ -37,6 +38,13 @@ type MarkingStyle = {
   day?: ViewStyle;
 };
 
+type ThreeSectionFillerStyles = {
+  leftFillerStyle: ViewStyle;
+  middleFillerStyle: ViewStyle;
+  rightFillerStyle: ViewStyle;
+  fillerStyle: ViewStyle;
+};
+
 const PeriodDay = (props: PeriodDayProps) => {
   const {
     theme,
@@ -51,13 +59,14 @@ const PeriodDay = (props: PeriodDayProps) => {
     children,
     testID
   } = props;
+
   const dateData = date ? xdateToData(date) : undefined;
   const style = useRef(styleConstructor(theme));
   const isDisabled = typeof marking?.disabled !== 'undefined' ? marking.disabled : state === 'disabled';
   const isInactive = typeof marking?.inactive !== 'undefined' ? marking.inactive : state === 'inactive';
   const isToday = typeof marking?.today !== 'undefined' ? marking.today : state === 'today';
 
-  const shouldDisableTouchEvent = () => {
+  const shouldDisableTouchEvent = useCallback(() => {
     const {disableTouchEvent} = marking || {};
     let disableTouch = false;
 
@@ -69,42 +78,63 @@ const PeriodDay = (props: PeriodDayProps) => {
       disableTouch = disableAllTouchEventsForInactiveDays;
     }
     return disableTouch;
-  };
+  }, [marking, isDisabled, isInactive, disableAllTouchEventsForDisabledDays, disableAllTouchEventsForInactiveDays]);
 
-  const markingStyle = useMemo(() => {
+  const markingStyle = useMemo((): MarkingStyle => {
     const defaultStyle: MarkingStyle = {textStyle: {}, containerStyle: {}};
 
     if (!marking) {
       return defaultStyle;
-    } else {
-      if (marking.disabled) {
-        defaultStyle.textStyle = {color: style.current.disabledText.color};
-      } else if (marking.inactive) {
-        defaultStyle.textStyle = {color: style.current.inactiveText.color};
-      } else if (marking.selected) {
-        defaultStyle.textStyle = {color: style.current.selectedText.color};
-      }
-      if (marking.startingDay) {
-        defaultStyle.startingDay = {backgroundColor: marking.color, borderColor: marking.borderColor};
-      }
-      if (marking.endingDay) {
-        defaultStyle.endingDay = {backgroundColor: marking.color, borderColor: marking.borderColor};
-      }
-      if (!marking.startingDay && !marking.endingDay) {
-        defaultStyle.day = {backgroundColor: marking.color, borderColor: marking.borderColor};
-      }
-      if (marking.textColor) {
-        defaultStyle.textStyle = {color: marking.textColor};
-      }
-      if (marking.customTextStyle) {
-        defaultStyle.textStyle = marking.customTextStyle;
-      }
-      if (marking.customContainerStyle) {
-        defaultStyle.containerStyle = marking.customContainerStyle;
-      }
-      return defaultStyle;
     }
-  }, [marking]);
+
+    // Handle text color based on state
+    if (marking.disabled) {
+      defaultStyle.textStyle = {color: style.current.disabledText.color};
+    } else if (marking.inactive) {
+      defaultStyle.textStyle = {color: style.current.inactiveText.color};
+    } else if (marking.selected) {
+      defaultStyle.textStyle = {color: style.current.selectedText.color};
+    }
+
+    // Handle period styling
+    if (marking.startingDay) {
+      defaultStyle.startingDay = {
+        backgroundColor: marking.color,
+        borderColor: marking.borderColor || marking.color,
+        borderWidth: marking.borderWith || 0.7,
+        borderRadius: marking.borderRadius || 9
+      };
+    }
+
+    if (marking.endingDay) {
+      defaultStyle.endingDay = {
+        backgroundColor: marking.color,
+        borderColor: marking.borderColor || marking.color,
+        borderWidth: marking.borderWith || 0.7,
+        borderRadius: marking.borderRadius || 9
+      };
+    }
+
+    if (!marking.startingDay && !marking.endingDay) {
+      defaultStyle.day = {
+        backgroundColor: marking.color,
+        borderColor: marking.borderColor || marking.color,
+        borderWidth: marking.borderWith || 0.7
+      };
+    }
+
+    if (marking.textColor) {
+      defaultStyle.textStyle = {color: marking.textColor};
+    }
+    if (marking.customTextStyle) {
+      defaultStyle.textStyle = marking.customTextStyle;
+    }
+    if (marking.customContainerStyle) {
+      defaultStyle.containerStyle = marking.customContainerStyle;
+    }
+
+    return defaultStyle;
+  }, [marking, style]);
 
   const containerStyle = useMemo(() => {
     const containerStyle = [style.current.base];
@@ -114,25 +144,35 @@ const PeriodDay = (props: PeriodDayProps) => {
     }
 
     if (marking) {
-      containerStyle.push({
-        borderRadius: 17,
-        overflow: 'hidden',
+      const baseContainerStyle = {
+        borderRadius: marking.borderRadius || 17,
+        overflow: 'hidden' as const,
         paddingTop: 5
-      });
-      const start = markingStyle.startingDay;
-      const end = markingStyle.endingDay;
-      if (start && !end) {
-        containerStyle.push({backgroundColor: markingStyle.startingDay?.backgroundColor});
-      } else if ((end && !start) || (end && start)) {
-        containerStyle.push({backgroundColor: markingStyle.endingDay?.backgroundColor});
+      };
+
+      containerStyle.push(baseContainerStyle);
+
+      // For multi-section, use transparent background to let fillers show through
+      if (marking.isMultiPeriod) {
+        containerStyle.push({backgroundColor: 'transparent'});
+      } else {
+        const start = markingStyle.startingDay;
+        const end = markingStyle.endingDay;
+
+        if (start && !end) {
+          containerStyle.push({backgroundColor: start.backgroundColor});
+        } else if ((end && !start) || (end && start)) {
+          containerStyle.push({backgroundColor: end.backgroundColor});
+        }
       }
 
       if (markingStyle.containerStyle) {
         containerStyle.push(markingStyle.containerStyle);
       }
     }
+
     return containerStyle;
-  }, [marking, isDisabled, isInactive, isToday]);
+  }, [marking, markingStyle, isToday, style]);
 
   const textStyle = useMemo(() => {
     const textStyle = [style.current.text];
@@ -152,137 +192,466 @@ const PeriodDay = (props: PeriodDayProps) => {
     }
 
     return textStyle;
-  }, [marking, isDisabled, isInactive, isToday]);
+  }, [marking, markingStyle, isDisabled, isInactive, isToday, style]);
 
-  const fillerStyles = useMemo(() => {
-    const leftFillerStyle: ViewStyle = {backgroundColor: undefined};
-    const rightFillerStyle: ViewStyle = {backgroundColor: undefined};
-    let fillerStyle = {};
+  // Reusable function to apply border styles to any section
+  const applyBorderToSection = useCallback(
+    (
+      section: ViewStyle,
+      backgroundColor: ColorValue | undefined,
+      borderColor: ColorValue | undefined,
+      borderWidth: number,
+      borderRadius: number,
+      borders: {
+        top?: boolean;
+        bottom?: boolean;
+        left?: boolean;
+        right?: boolean;
+        topLeft?: boolean;
+        bottomLeft?: boolean;
+        topRight?: boolean;
+        bottomRight?: boolean;
+      }
+    ) => {
+      if (backgroundColor) {
+        section.backgroundColor = backgroundColor;
+      }
 
-    const start = markingStyle.startingDay;
-    const end = markingStyle.endingDay;
-    const borderColor = markingStyle.day?.borderColor;
-    const borderWidth = marking?.borderWith;
-    const borderRadius = marking?.borderRadius;
-    const isOverlap = marking?.isMultiPeriod && start && end;
-    if (isOverlap) {
-      // Handle overlapping case - left side shows end, right side shows start
-      leftFillerStyle.backgroundColor = marking.endPeriodColor || markingStyle.endingDay?.backgroundColor;
-      leftFillerStyle.borderTopWidth = borderWidth;
-      leftFillerStyle.borderBottomWidth = borderWidth;
-      leftFillerStyle.borderRightWidth = borderWidth;
-      leftFillerStyle.borderColor = marking.endPeriodBorderColor || markingStyle.endingDay?.borderColor;
-      leftFillerStyle.borderTopRightRadius = borderRadius;
-      leftFillerStyle.borderBottomRightRadius = borderRadius;
+      if (borderColor) {
+        section.borderColor = borderColor;
+      }
 
-      rightFillerStyle.backgroundColor = marking.startPeriodColor || markingStyle.startingDay?.backgroundColor;
-      rightFillerStyle.borderTopWidth = borderWidth;
-      rightFillerStyle.borderBottomWidth = borderWidth;
-      rightFillerStyle.borderLeftWidth = borderWidth;
-      rightFillerStyle.borderColor = marking.startPeriodBorderColor || markingStyle.startingDay?.borderColor;
-      rightFillerStyle.borderTopLeftRadius = borderRadius;
-      rightFillerStyle.borderBottomLeftRadius = borderRadius;
-    } else if (start && !end) {
-      // Starting day (original logic)
-      leftFillerStyle.backgroundColor = markingStyle.startingDay?.backgroundColor;
-      leftFillerStyle.borderTopWidth = borderWidth;
-      leftFillerStyle.borderBottomWidth = borderWidth;
-      leftFillerStyle.borderLeftWidth = borderWidth;
-      leftFillerStyle.borderColor = markingStyle.startingDay?.borderColor;
-      leftFillerStyle.borderTopLeftRadius = borderRadius;
-      leftFillerStyle.borderBottomLeftRadius = borderRadius;
+      // Apply border widths
+      if (borders.top) section.borderTopWidth = borderWidth;
+      if (borders.bottom) section.borderBottomWidth = borderWidth;
+      if (borders.left) section.borderLeftWidth = borderWidth;
+      if (borders.right) section.borderRightWidth = borderWidth;
 
-      rightFillerStyle.backgroundColor = markingStyle.startingDay?.backgroundColor;
-      rightFillerStyle.borderTopWidth = borderWidth;
-      rightFillerStyle.borderBottomWidth = borderWidth;
-      rightFillerStyle.borderColor = markingStyle.startingDay?.borderColor;
-    } else if (end && !start) {
-      // Ending day (original logic)
-      leftFillerStyle.backgroundColor = markingStyle.endingDay?.backgroundColor;
-      leftFillerStyle.borderTopWidth = borderWidth;
-      leftFillerStyle.borderBottomWidth = borderWidth;
-      leftFillerStyle.borderColor = markingStyle.endingDay?.borderColor;
+      // Apply border radius
+      if (borders.topLeft) section.borderTopLeftRadius = borderRadius;
+      if (borders.bottomLeft) section.borderBottomLeftRadius = borderRadius;
+      if (borders.topRight) section.borderTopRightRadius = borderRadius;
+      if (borders.bottomRight) section.borderBottomRightRadius = borderRadius;
+    },
+    []
+  );
 
-      rightFillerStyle.backgroundColor = markingStyle.endingDay?.backgroundColor;
-      rightFillerStyle.borderTopWidth = borderWidth;
-      rightFillerStyle.borderBottomWidth = borderWidth;
-      rightFillerStyle.borderColor = markingStyle.endingDay?.borderColor;
-      rightFillerStyle.borderRightWidth = borderWidth;
-      rightFillerStyle.borderTopRightRadius = borderRadius;
-      rightFillerStyle.borderBottomRightRadius = borderRadius;
-    } else if (markingStyle.day) {
-      // Middle day (original logic)
-      leftFillerStyle.backgroundColor = markingStyle.day?.backgroundColor;
-      leftFillerStyle.borderTopWidth = borderWidth;
-      leftFillerStyle.borderBottomWidth = borderWidth;
-      leftFillerStyle.borderColor = borderColor;
+  // Helper to create a fully closed border (used for single day periods)
+  const applyFullyClosedBorder = useCallback(
+    (
+      section: ViewStyle,
+      backgroundColor: ColorValue | undefined,
+      borderColor: ColorValue | undefined,
+      borderWidth: number,
+      borderRadius: number
+    ) => {
+      applyBorderToSection(section, backgroundColor, borderColor, borderWidth, borderRadius, {
+        top: true,
+        bottom: true,
+        left: true,
+        right: true,
+        topLeft: true,
+        bottomLeft: true,
+        topRight: true,
+        bottomRight: true
+      });
+    },
+    [applyBorderToSection]
+  );
 
-      rightFillerStyle.backgroundColor = markingStyle.day?.backgroundColor;
-      rightFillerStyle.borderTopWidth = borderWidth;
-      rightFillerStyle.borderBottomWidth = borderWidth;
-      rightFillerStyle.borderColor = borderColor;
+  // Helper function to handle two-section multi-period layout
+  const handleTwoSectionMultiPeriod = useCallback(
+    (
+      leftFillerStyle: ViewStyle,
+      rightFillerStyle: ViewStyle,
+      marking: MarkingProps,
+      borderWidth: number,
+      borderRadius: number
+    ) => {
+      // Left Section
+      if (marking.leftSectionIsSingleDay) {
+        // Single-day period in left section - fully closed
+        applyFullyClosedBorder(
+          leftFillerStyle,
+          marking.leftSectionColor,
+          marking.leftSectionBorderColor,
+          borderWidth,
+          borderRadius
+        );
+      } else {
+        // Ending period - only right border closed
+        applyBorderToSection(
+          leftFillerStyle,
+          marking.leftSectionColor,
+          marking.leftSectionBorderColor,
+          borderWidth,
+          borderRadius,
+          {top: true, bottom: true, right: true, topRight: true, bottomRight: true}
+        );
+      }
 
-      fillerStyle = {
-        borderColor: markingStyle.day?.borderColor
-        //   backgroundColor: markingStyle.day?.backgroundColor
-      };
+      // Right Section
+      if (marking.rightSectionIsSingleDay) {
+        // Single-day period in right section - fully closed
+        applyFullyClosedBorder(
+          rightFillerStyle,
+          marking.rightSectionColor,
+          marking.rightSectionBorderColor,
+          borderWidth,
+          borderRadius
+        );
+      } else {
+        // Starting period - only left border closed
+        applyBorderToSection(
+          rightFillerStyle,
+          marking.rightSectionColor,
+          marking.rightSectionBorderColor,
+          borderWidth,
+          borderRadius,
+          {top: true, bottom: true, left: true, topLeft: true, bottomLeft: true}
+        );
+      }
+    },
+    [applyBorderToSection, applyFullyClosedBorder]
+  );
+
+  // Helper function to handle three-section multi-period layout
+  const handleThreeSectionMultiPeriod = useCallback(
+    (
+      leftFillerStyle: ViewStyle,
+      middleFillerStyle: ViewStyle,
+      rightFillerStyle: ViewStyle,
+      marking: MarkingProps,
+      borderWidth: number,
+      borderRadius: number
+    ) => {
+      // Left Section (ending period) - has right border only
+      applyBorderToSection(
+        leftFillerStyle,
+        marking.leftSectionColor,
+        marking.leftSectionBorderColor,
+        borderWidth,
+        borderRadius,
+        {top: true, bottom: true, right: true, topRight: true, bottomRight: true}
+      );
+
+      // Middle Section (single day period) - fully closed borders
+      applyFullyClosedBorder(
+        middleFillerStyle,
+        marking.middleSectionColor,
+        marking.middleSectionBorderColor,
+        borderWidth,
+        borderRadius
+      );
+
+      // Right Section (starting period) - has left border only
+      applyBorderToSection(
+        rightFillerStyle,
+        marking.rightSectionColor,
+        marking.rightSectionBorderColor,
+        borderWidth,
+        borderRadius,
+        {top: true, bottom: true, left: true, topLeft: true, bottomLeft: true}
+      );
+    },
+    [applyBorderToSection, applyFullyClosedBorder]
+  );
+
+  // Helper function to handle fallback multi-period cases
+  const handleFallbackMultiPeriod = useCallback(
+    (
+      leftFillerStyle: ViewStyle,
+      middleFillerStyle: ViewStyle,
+      rightFillerStyle: ViewStyle,
+      marking: MarkingProps,
+      borderWidth: number,
+      borderRadius: number,
+      hasLeft: boolean,
+      hasMiddle: boolean,
+      hasRight: boolean
+    ) => {
+      if (hasLeft) {
+        if (!hasMiddle && !hasRight) {
+          // Only left section - fully closed
+          applyFullyClosedBorder(
+            leftFillerStyle,
+            marking.leftSectionColor,
+            marking.leftSectionBorderColor,
+            borderWidth,
+            borderRadius
+          );
+        } else {
+          // Has other sections - right border closed
+          applyBorderToSection(
+            leftFillerStyle,
+            marking.leftSectionColor,
+            marking.leftSectionBorderColor,
+            borderWidth,
+            borderRadius,
+            {top: true, bottom: true, right: true, topRight: true, bottomRight: true}
+          );
+        }
+      }
+
+      if (hasMiddle) {
+        // Middle section is always fully closed
+        applyFullyClosedBorder(
+          middleFillerStyle,
+          marking.middleSectionColor,
+          marking.middleSectionBorderColor,
+          borderWidth,
+          borderRadius
+        );
+      }
+
+      if (hasRight) {
+        if (!hasMiddle && !hasLeft) {
+          // Only right section - fully closed
+          applyFullyClosedBorder(
+            rightFillerStyle,
+            marking.rightSectionColor,
+            marking.rightSectionBorderColor,
+            borderWidth,
+            borderRadius
+          );
+        } else {
+          // Has other sections - left border closed
+          applyBorderToSection(
+            rightFillerStyle,
+            marking.rightSectionColor,
+            marking.rightSectionBorderColor,
+            borderWidth,
+            borderRadius,
+            {top: true, bottom: true, left: true, topLeft: true, bottomLeft: true}
+          );
+        }
+      }
+    },
+    [applyBorderToSection, applyFullyClosedBorder]
+  );
+
+  // Helper function to handle single section period styling
+  const handleSinglePeriod = useCallback(
+    (
+      leftFillerStyle: ViewStyle,
+      rightFillerStyle: ViewStyle,
+      fillerStyle: ViewStyle,
+      markingStyle: MarkingStyle,
+      borderWidth: number,
+      borderRadius: number
+    ): ViewStyle => {
+      const start = markingStyle.startingDay;
+      const end = markingStyle.endingDay;
+
+      if (start && !end) {
+        // Starting day - left border closed, right border open
+        applyBorderToSection(leftFillerStyle, start.backgroundColor, start.borderColor, borderWidth, borderRadius, {
+          top: true,
+          bottom: true,
+          left: true,
+          topLeft: true,
+          bottomLeft: true
+        });
+
+        applyBorderToSection(rightFillerStyle, start.backgroundColor, start.borderColor, borderWidth, borderRadius, {
+          top: true,
+          bottom: true
+        });
+      } else if (end && !start) {
+        // Ending day - left border open, right border closed
+        applyBorderToSection(leftFillerStyle, end.backgroundColor, end.borderColor, borderWidth, borderRadius, {
+          top: true,
+          bottom: true
+        });
+
+        applyBorderToSection(rightFillerStyle, end.backgroundColor, end.borderColor, borderWidth, borderRadius, {
+          top: true,
+          bottom: true,
+          right: true,
+          topRight: true,
+          bottomRight: true
+        });
+      } else if (start && end) {
+        // Single day period - FULLY CLOSED BORDERS
+        return {
+          borderColor: start.borderColor || end.borderColor,
+          backgroundColor: start.backgroundColor || end.backgroundColor,
+          borderTopWidth: borderWidth,
+          borderBottomWidth: borderWidth,
+          borderLeftWidth: borderWidth,
+          borderRightWidth: borderWidth,
+          borderTopLeftRadius: borderRadius,
+          borderBottomLeftRadius: borderRadius,
+          borderTopRightRadius: borderRadius,
+          borderBottomRightRadius: borderRadius
+        };
+      } else if (markingStyle.day) {
+        // Middle day - no left/right borders (period continues)
+        return {
+          borderColor: markingStyle.day.borderColor,
+          backgroundColor: markingStyle.day.backgroundColor,
+          borderTopWidth: borderWidth,
+          borderBottomWidth: borderWidth
+        };
+      }
+
+      return fillerStyle;
+    },
+    [applyBorderToSection]
+  );
+
+  const threeSectionFillerStyles = useMemo((): ThreeSectionFillerStyles => {
+    const leftFillerStyle: ViewStyle = {backgroundColor: 'transparent'};
+    const middleFillerStyle: ViewStyle = {backgroundColor: 'transparent'};
+    const rightFillerStyle: ViewStyle = {backgroundColor: 'transparent'};
+    let fillerStyle: ViewStyle = {};
+
+    if (!marking) {
+      return {leftFillerStyle, middleFillerStyle, rightFillerStyle, fillerStyle};
     }
 
-    return {leftFillerStyle, rightFillerStyle, fillerStyle};
-  }, [marking, markingStyle]);
+    const borderWidth = marking.borderWith || 0.7;
+    const borderRadius = marking.borderRadius || 9;
+
+    if (marking.isMultiPeriod) {
+      const hasLeft = !!marking.leftSectionColor;
+      const hasMiddle = !!marking.middleSectionColor;
+      const hasRight = !!marking.rightSectionColor;
+
+      if (hasLeft && hasRight && !hasMiddle) {
+        // CASE 1: 2 rulings - handle edge cases for single-day periods
+        handleTwoSectionMultiPeriod(leftFillerStyle, rightFillerStyle, marking, borderWidth, borderRadius);
+      } else if (hasLeft && hasMiddle && hasRight) {
+        // CASE 2: 3 rulings - ending period, single-day period, starting period
+        handleThreeSectionMultiPeriod(
+          leftFillerStyle,
+          middleFillerStyle,
+          rightFillerStyle,
+          marking,
+          borderWidth,
+          borderRadius
+        );
+      } else {
+        // Fallback for other multi-period cases
+        handleFallbackMultiPeriod(
+          leftFillerStyle,
+          middleFillerStyle,
+          rightFillerStyle,
+          marking,
+          borderWidth,
+          borderRadius,
+          hasLeft,
+          hasMiddle,
+          hasRight
+        );
+      }
+    } else {
+      // Handle single section (original logic)
+      fillerStyle = handleSinglePeriod(
+        leftFillerStyle,
+        rightFillerStyle,
+        fillerStyle,
+        markingStyle,
+        borderWidth,
+        borderRadius
+      );
+    }
+
+    return {leftFillerStyle, middleFillerStyle, rightFillerStyle, fillerStyle};
+  }, [
+    marking,
+    markingStyle,
+    handleTwoSectionMultiPeriod,
+    handleThreeSectionMultiPeriod,
+    handleFallbackMultiPeriod,
+    handleSinglePeriod
+  ]);
 
   const _onPress = useCallback(() => {
     onPress?.(dateData);
-  }, [onPress, date]);
+  }, [onPress, dateData]);
 
   const _onLongPress = useCallback(() => {
     onLongPress?.(dateData);
-  }, [onLongPress, date]);
+  }, [onLongPress, dateData]);
 
-  const renderFillers = () => {
-    if (marking) {
+  const renderFillers = useCallback(() => {
+    if (!marking) return null;
+
+    if (marking.isMultiPeriod) {
+      const hasLeft = !!marking.leftSectionColor;
+      const hasMiddle = !!marking.middleSectionColor;
+      const hasRight = !!marking.rightSectionColor;
+
+      if (hasLeft && hasRight && !hasMiddle) {
+        // 2 rulings: only render left and right sections (NO MIDDLE!)
+        return (
+          <View style={[style.current.fillers]}>
+            <View style={[style.current.leftFiller, threeSectionFillerStyles.leftFillerStyle]} />
+            <View style={[style.current.rightFiller, threeSectionFillerStyles.rightFillerStyle]} />
+          </View>
+        );
+      } else {
+        // 3 rulings: render all three sections
+        return (
+          <View style={[style.current.fillers]}>
+            <View style={[style.current.leftFiller, threeSectionFillerStyles.leftFillerStyle]} />
+            <View
+              style={[
+                style.current.middleFiller || style.current.leftFiller,
+                threeSectionFillerStyles.middleFillerStyle
+              ]}
+            />
+            <View style={[style.current.rightFiller, threeSectionFillerStyles.rightFillerStyle]} />
+          </View>
+        );
+      }
+    } else {
+      // Single period: render 2-section layout (original)
       return (
-        <View style={[style.current.fillers, fillerStyles.fillerStyle]}>
-          <View style={[style.current.leftFiller, fillerStyles.leftFillerStyle]} />
-          <View style={[style.current.rightFiller, fillerStyles.rightFillerStyle]} />
+        <View style={[style.current.fillers, threeSectionFillerStyles.fillerStyle]}>
+          <View style={[style.current.leftFiller, threeSectionFillerStyles.leftFillerStyle]} />
+          <View style={[style.current.rightFiller, threeSectionFillerStyles.rightFillerStyle]} />
         </View>
       );
     }
-  };
+  }, [marking, threeSectionFillerStyles, style]);
 
-  const renderMarking = () => {
-    if (marking) {
-      const {marked, dotColor} = marking;
+  const renderMarking = useCallback(() => {
+    if (!marking) return null;
 
-      return (
-        <Marking
-          type={'dot'}
-          theme={theme}
-          marked={marked}
-          disabled={isDisabled}
-          inactive={isInactive}
-          today={isToday}
-          dotColor={dotColor}
-        />
-      );
-    }
-  };
+    const {marked, dotColor} = marking;
 
-  const renderText = () => {
+    return (
+      <Marking
+        type={'dot'}
+        theme={theme}
+        marked={marked}
+        disabled={isDisabled}
+        inactive={isInactive}
+        today={isToday}
+        dotColor={dotColor}
+      />
+    );
+  }, [marking, theme, isDisabled, isInactive, isToday]);
+
+  const renderText = useCallback(() => {
     return (
       <Text allowFontScaling={false} style={textStyle}>
         {String(children)}
       </Text>
     );
-  };
+  }, [textStyle, children]);
+
   const Component = marking ? TouchableWithoutFeedback : TouchableOpacity;
+  const touchDisabled = shouldDisableTouchEvent();
 
   return (
     <Component
       testID={testID}
-      disabled={shouldDisableTouchEvent()}
-      onPress={!shouldDisableTouchEvent() ? _onPress : undefined}
-      onLongPress={!shouldDisableTouchEvent() ? _onLongPress : undefined}
+      disabled={touchDisabled}
+      onPress={!touchDisabled ? _onPress : undefined}
+      onLongPress={!touchDisabled ? _onLongPress : undefined}
       accessible
       accessibilityRole={isDisabled ? undefined : 'button'}
       accessibilityLabel={accessibilityLabel}
