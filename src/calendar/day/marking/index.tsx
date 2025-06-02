@@ -48,16 +48,6 @@ export interface MarkingProps extends DotProps {
   customTextStyle?: StyleProp<TextStyle>;
   customContainerStyle?: StyleProp<ViewStyle>;
   dotColor?: string;
-  // START: New properties for border customization and overlapping period handling
-  borderWith?: number;
-  borderRadius?: number;
-  borderColor?: string;
-  isMultiPeriod?: boolean;
-  startPeriodColor?: string;
-  endPeriodColor?: string;
-  startPeriodBorderColor?: string;
-  endPeriodBorderColor?: string;
-  // END: New properties for border customization and overlapping period handling
   //multi-dot
   dots?: DOT[];
   //multi-period

@@ -53,6 +53,7 @@ const PeriodDay = (props: PeriodDayProps) => {
   } = props;
   const dateData = date ? xdateToData(date) : undefined;
   const style = useRef(styleConstructor(theme));
+
   const isDisabled = typeof marking?.disabled !== 'undefined' ? marking.disabled : state === 'disabled';
   const isInactive = typeof marking?.inactive !== 'undefined' ? marking.inactive : state === 'inactive';
   const isToday = typeof marking?.today !== 'undefined' ? marking.today : state === 'today';
@@ -84,15 +85,17 @@ const PeriodDay = (props: PeriodDayProps) => {
       } else if (marking.selected) {
         defaultStyle.textStyle = {color: style.current.selectedText.color};
       }
+
       if (marking.startingDay) {
-        defaultStyle.startingDay = {backgroundColor: marking.color, borderColor: marking.borderColor};
+        defaultStyle.startingDay = {backgroundColor: marking.color};
       }
       if (marking.endingDay) {
-        defaultStyle.endingDay = {backgroundColor: marking.color, borderColor: marking.borderColor};
+        defaultStyle.endingDay = {backgroundColor: marking.color};
       }
       if (!marking.startingDay && !marking.endingDay) {
-        defaultStyle.day = {backgroundColor: marking.color, borderColor: marking.borderColor};
+        defaultStyle.day = {backgroundColor: marking.color};
       }
+
       if (marking.textColor) {
         defaultStyle.textStyle = {color: marking.textColor};
       }
@@ -102,6 +105,7 @@ const PeriodDay = (props: PeriodDayProps) => {
       if (marking.customContainerStyle) {
         defaultStyle.containerStyle = marking.customContainerStyle;
       }
+
       return defaultStyle;
     }
   }, [marking]);
@@ -119,6 +123,7 @@ const PeriodDay = (props: PeriodDayProps) => {
         overflow: 'hidden',
         paddingTop: 5
       });
+
       const start = markingStyle.startingDay;
       const end = markingStyle.endingDay;
       if (start && !end) {
@@ -161,75 +166,19 @@ const PeriodDay = (props: PeriodDayProps) => {
 
     const start = markingStyle.startingDay;
     const end = markingStyle.endingDay;
-    const borderColor = markingStyle.day?.borderColor;
-    const borderWidth = marking?.borderWith;
-    const borderRadius = marking?.borderRadius;
-    const isOverlap = marking?.isMultiPeriod && start && end;
-    if (isOverlap) {
-      // Handle overlapping case - left side shows end, right side shows start
-      leftFillerStyle.backgroundColor = marking.endPeriodColor || markingStyle.endingDay?.backgroundColor;
-      leftFillerStyle.borderTopWidth = borderWidth;
-      leftFillerStyle.borderBottomWidth = borderWidth;
-      leftFillerStyle.borderRightWidth = borderWidth;
-      leftFillerStyle.borderColor = marking.endPeriodBorderColor || markingStyle.endingDay?.borderColor;
-      leftFillerStyle.borderTopRightRadius = borderRadius;
-      leftFillerStyle.borderBottomRightRadius = borderRadius;
 
-      rightFillerStyle.backgroundColor = marking.startPeriodColor || markingStyle.startingDay?.backgroundColor;
-      rightFillerStyle.borderTopWidth = borderWidth;
-      rightFillerStyle.borderBottomWidth = borderWidth;
-      rightFillerStyle.borderLeftWidth = borderWidth;
-      rightFillerStyle.borderColor = marking.startPeriodBorderColor || markingStyle.startingDay?.borderColor;
-      rightFillerStyle.borderTopLeftRadius = borderRadius;
-      rightFillerStyle.borderBottomLeftRadius = borderRadius;
-    } else if (start && !end) {
-      // Starting day (original logic)
-      leftFillerStyle.backgroundColor = markingStyle.startingDay?.backgroundColor;
-      leftFillerStyle.borderTopWidth = borderWidth;
-      leftFillerStyle.borderBottomWidth = borderWidth;
-      leftFillerStyle.borderLeftWidth = borderWidth;
-      leftFillerStyle.borderColor = markingStyle.startingDay?.borderColor;
-      leftFillerStyle.borderTopLeftRadius = borderRadius;
-      leftFillerStyle.borderBottomLeftRadius = borderRadius;
-
+    if (start && !end) {
       rightFillerStyle.backgroundColor = markingStyle.startingDay?.backgroundColor;
-      rightFillerStyle.borderTopWidth = borderWidth;
-      rightFillerStyle.borderBottomWidth = borderWidth;
-      rightFillerStyle.borderColor = markingStyle.startingDay?.borderColor;
     } else if (end && !start) {
-      // Ending day (original logic)
       leftFillerStyle.backgroundColor = markingStyle.endingDay?.backgroundColor;
-      leftFillerStyle.borderTopWidth = borderWidth;
-      leftFillerStyle.borderBottomWidth = borderWidth;
-      leftFillerStyle.borderColor = markingStyle.endingDay?.borderColor;
-
-      rightFillerStyle.backgroundColor = markingStyle.endingDay?.backgroundColor;
-      rightFillerStyle.borderTopWidth = borderWidth;
-      rightFillerStyle.borderBottomWidth = borderWidth;
-      rightFillerStyle.borderColor = markingStyle.endingDay?.borderColor;
-      rightFillerStyle.borderRightWidth = borderWidth;
-      rightFillerStyle.borderTopRightRadius = borderRadius;
-      rightFillerStyle.borderBottomRightRadius = borderRadius;
     } else if (markingStyle.day) {
-      // Middle day (original logic)
       leftFillerStyle.backgroundColor = markingStyle.day?.backgroundColor;
-      leftFillerStyle.borderTopWidth = borderWidth;
-      leftFillerStyle.borderBottomWidth = borderWidth;
-      leftFillerStyle.borderColor = borderColor;
-
       rightFillerStyle.backgroundColor = markingStyle.day?.backgroundColor;
-      rightFillerStyle.borderTopWidth = borderWidth;
-      rightFillerStyle.borderBottomWidth = borderWidth;
-      rightFillerStyle.borderColor = borderColor;
-
-      fillerStyle = {
-        borderColor: markingStyle.day?.borderColor
-        //   backgroundColor: markingStyle.day?.backgroundColor
-      };
+      fillerStyle = {backgroundColor: markingStyle.day?.backgroundColor};
     }
 
     return {leftFillerStyle, rightFillerStyle, fillerStyle};
-  }, [marking, markingStyle]);
+  }, [marking]);
 
   const _onPress = useCallback(() => {
     onPress?.(dateData);
@@ -275,6 +224,7 @@ const PeriodDay = (props: PeriodDayProps) => {
       </Text>
     );
   };
+
   const Component = marking ? TouchableWithoutFeedback : TouchableOpacity;
 
   return (
