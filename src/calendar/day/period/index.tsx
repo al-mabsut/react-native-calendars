@@ -569,11 +569,11 @@ const PeriodDay = (props: PeriodDayProps) => {
 
   const _onPress = useCallback(() => {
     onPress?.(dateData);
-  }, [onPress, dateData]);
+  }, [onPress, date]);
 
   const _onLongPress = useCallback(() => {
     onLongPress?.(dateData);
-  }, [onLongPress, dateData]);
+  }, [onLongPress, date]);
 
   const renderFillers = useCallback(() => {
     if (!marking) return null;
@@ -631,6 +631,7 @@ const PeriodDay = (props: PeriodDayProps) => {
         inactive={isInactive}
         today={isToday}
         dotColor={dotColor}
+        dischargeIcon={marking?.dischargeIcon}
       />
     );
   }, [marking, theme, isDisabled, isInactive, isToday]);
@@ -658,9 +659,21 @@ const PeriodDay = (props: PeriodDayProps) => {
     >
       <View style={style.current.container}>
         {renderFillers()}
-        <View style={containerStyle}>
-          {renderText()}
-          {renderMarking()}
+        <View style={containerStyle}>      
+          {marking && marking.selected ? (
+            <>
+              <View style={{ position: "absolute", top: 2, right: 6 }}>
+                {renderText()}
+              </View>
+              <View style={{ position: "absolute", bottom: 2, left: 6 }}>
+                {renderMarking()}
+              </View>
+            </>
+          ) : (
+            <>
+              {renderText()}
+            </>
+          )}
         </View>
       </View>
     </Component>

@@ -11,9 +11,10 @@ export interface DotProps {
   disabled?: boolean;
   inactive?: boolean;
   today?: boolean;
+  dischargeIcon?: React.ReactNode
 }
 
-const Dot = ({theme, marked, disabled, inactive, color, today, selected}: DotProps) => {
+const Dot = ({theme, marked, disabled, inactive, color, today, selected, dischargeIcon}: DotProps) => {
   const style = useRef(styleConstructor(theme));
   const dotStyle = [style.current.dot] as object[];
 
@@ -41,7 +42,9 @@ const Dot = ({theme, marked, disabled, inactive, color, today, selected}: DotPro
     }
   }
 
-  return <View style={dotStyle}/>;
+  return <View>
+    {dischargeIcon}
+  </View>;
 };
 
 export default Dot;

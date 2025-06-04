@@ -48,6 +48,7 @@ export interface MarkingProps extends DotProps {
   customTextStyle?: StyleProp<TextStyle>;
   customContainerStyle?: StyleProp<ViewStyle>;
   dotColor?: string;
+  dischargeIcon?: React.ReactNode
 
   // Border customization properties
   borderWith?: number;
@@ -88,7 +89,7 @@ export interface MarkingProps extends DotProps {
 }
 
 const Marking = (props: MarkingProps) => {
-  const {theme, type, dots, periods, selected, dotColor} = props;
+  const {theme, type, dots, periods, selected, dotColor, dischargeIcon} = props;
   const style = useRef(styleConstructor(theme));
 
   const getItems = (items?: DOT[] | PERIOD[]) => {
@@ -148,7 +149,7 @@ const Marking = (props: MarkingProps) => {
       color = selected && item.selectedDotColor ? item.selectedDotColor : item.color;
     }
 
-    return <Dot {...dotProps} key={key} color={color} />;
+    return <Dot {...dotProps} key={key} color={color} dischargeIcon={dischargeIcon}/>;
   };
 
   return renderMarkingByType();
