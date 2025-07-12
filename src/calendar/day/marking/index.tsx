@@ -32,6 +32,12 @@ type PERIOD = {
   endingDay?: boolean;
 };
 
+export enum InProgressImagePositions {
+  left = 'left',
+  full = 'full',
+  right = 'right'
+}
+
 export interface MarkingProps extends DotProps {
   type?: MarkingTypes;
   theme?: Theme;
@@ -86,6 +92,9 @@ export interface MarkingProps extends DotProps {
   endingDay?: boolean;
   accessibilityLabel?: string;
   customStyles?: CustomStyle;
+
+  // InProgress Image Position
+  inProgressImagePosition?: InProgressImagePositions;
 }
 
 const Marking = (props: MarkingProps) => {

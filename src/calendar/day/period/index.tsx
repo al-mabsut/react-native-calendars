@@ -9,12 +9,14 @@ import {
   ViewProps,
   TextStyle,
   StyleProp,
-  ColorValue
+  ColorValue,
+  Image
 } from 'react-native';
 import {xdateToData} from '../../../interface';
 import {Theme, DayState, DateData} from '../../../types';
-import Marking, {MarkingProps} from '../marking';
+import Marking, {MarkingProps, InProgressImagePositions} from '../marking';
 import styleConstructor from './style';
+const yellowStripe = require('./yellowStripe.png');
 
 export interface PeriodDayProps extends ViewProps {
   theme?: Theme;
@@ -658,6 +660,34 @@ const PeriodDay = (props: PeriodDayProps) => {
       accessibilityLabel={accessibilityLabel}
     >
       <View style={style.current.container}>
+        {marking?.inProgressImagePosition && (
+          <Image
+            source={yellowStripe}
+            style={[
+              // eslint-disable-next-line react-native/no-inline-styles
+              {
+                width: marking?.inProgressImagePosition === InProgressImagePositions.full ? '100%' : '50%',
+                height: '100%',
+                shadowColor: '#fff', // This is required to hide weird shadow
+                position: 'absolute',
+                top: marking?.borderWith || 0.7,
+                left: marking?.inProgressImagePosition === InProgressImagePositions.right ? '50%' : 0,
+                zIndex: 1
+              },
+              marking?.inProgressImagePosition === InProgressImagePositions.left
+                ? {
+                    borderBottomRightRadius: marking?.borderRadius || 9,
+                    borderTopRightRadius: marking?.borderRadius || 9
+                  }
+                : marking?.inProgressImagePosition === InProgressImagePositions.right
+                ? {
+                    borderBottomLeftRadius: marking?.borderRadius || 9,
+                    borderTopLeftRadius: marking?.borderRadius || 9
+                  }
+                : {}
+            ]}
+          />
+        )}
         {renderFillers()}
         <View style={containerStyle}>      
           {marking && marking.selected ? (
