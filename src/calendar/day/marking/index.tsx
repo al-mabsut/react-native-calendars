@@ -33,8 +33,11 @@ type PERIOD = {
 };
 
 export enum InProgressImagePositions {
-  left = 'left',
+  fullLeft = 'fullLeft',
+  fullRight = 'fullRight',
   full = 'full',
+  middle = 'middle',
+  left = 'left',
   right = 'right'
 }
 
