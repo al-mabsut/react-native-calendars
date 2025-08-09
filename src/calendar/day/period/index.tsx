@@ -666,12 +666,26 @@ const PeriodDay = (props: PeriodDayProps) => {
             style={[
               // eslint-disable-next-line react-native/no-inline-styles
               {
-                width: marking?.inProgressImagePosition === InProgressImagePositions.full ? '100%' : '50%',
+                width:
+                  marking?.inProgressImagePosition === InProgressImagePositions.full
+                    ? '100%'
+                    : [
+                        InProgressImagePositions.left,
+                        InProgressImagePositions.right,
+                        InProgressImagePositions.middle
+                      ].includes(marking?.inProgressImagePosition)
+                    ? '33%'
+                    : '50%',
                 height: '100%',
-                shadowColor: '#fff', // This is required to hide weird shadow
+                shadowColor: '#fff',
                 position: 'absolute',
                 top: marking?.borderWith || 0.7,
-                left: marking?.inProgressImagePosition === InProgressImagePositions.right ? '50%' : 0,
+                left:
+                  marking?.inProgressImagePosition === InProgressImagePositions.right
+                    ? '66%'
+                    : marking?.inProgressImagePosition === InProgressImagePositions.fullRight
+                    ? '50%'
+                    : 0,
                 zIndex: 1
               },
               marking?.inProgressImagePosition === InProgressImagePositions.left
