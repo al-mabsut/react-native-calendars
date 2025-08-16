@@ -702,6 +702,7 @@ const PeriodDay = (props: PeriodDayProps) => {
             ]}
           />
         )}
+        {marking?.customComponent}
         {renderFillers()}
         <View style={containerStyle}>      
           {marking && marking.selected ? (
