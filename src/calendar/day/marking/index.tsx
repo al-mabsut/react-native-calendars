@@ -98,6 +98,7 @@ export interface MarkingProps extends DotProps {
 
   // InProgress Image Position
   inProgressImagePosition?: InProgressImagePositions;
+  customComponent?: React.ReactNode;
 }
 
 const Marking = (props: MarkingProps) => {
