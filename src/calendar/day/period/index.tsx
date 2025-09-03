@@ -706,14 +706,16 @@ const PeriodDay = (props: PeriodDayProps) => {
         {renderFillers()}
         <View style={containerStyle}>      
           {marking && marking.selected ? (
-            <>
-              <View style={{ position: "absolute", top: 2, right: 6 }}>
-                {renderText()}
-              </View>
-              <View style={{ position: "absolute", bottom: 2, left: 6 }}>
-                {renderMarking()}
-              </View>
-            </>
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+            >
+              <View style={{position: 'absolute', top: -6, zIndex: 3}}>{renderText()}</View>
+              <View style={{position: 'absolute', bottom: 2}}>{renderMarking()}</View>
+            </View>
           ) : (
             <>
               {renderText()}
