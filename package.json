@@ -1,11 +1,11 @@
 {
   "name": "react-native-calendars",
   "version": "1.22.0",
-  "main": "src/index.ts",
-  "types": "src/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "description": "React Native Calendar Components",
   "scripts": {
-    "build": "yarn build:ts",
+    "build": "yarn build:ts && bash scripts/copy-assets.sh",
     "build:ts": "tsc",
     "build:dev": "tsc --noEmit",
     "build:docs": "node ./scripts/build-docs.js",
