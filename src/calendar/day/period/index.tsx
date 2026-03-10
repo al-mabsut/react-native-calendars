@@ -589,22 +589,22 @@ const PeriodDay = (props: PeriodDayProps) => {
         // 2 rulings: only render left and right sections (NO MIDDLE!)
         return (
           <View style={[style.current.fillers]}>
-            <View style={[style.current.leftFiller, threeSectionFillerStyles.leftFillerStyle]} />
-            <View style={[style.current.rightFiller, threeSectionFillerStyles.rightFillerStyle]} />
+            <View style={[style.current.leftFiller, threeSectionFillerStyles.leftFillerStyle]}/>
+            <View style={[style.current.rightFiller, threeSectionFillerStyles.rightFillerStyle]}/>
           </View>
         );
       } else {
         // 3 rulings: render all three sections
         return (
           <View style={[style.current.fillers]}>
-            <View style={[style.current.leftFiller, threeSectionFillerStyles.leftFillerStyle]} />
+            <View style={[style.current.leftFiller, threeSectionFillerStyles.leftFillerStyle]}/>
             <View
               style={[
                 style.current.middleFiller || style.current.leftFiller,
                 threeSectionFillerStyles.middleFillerStyle
               ]}
             />
-            <View style={[style.current.rightFiller, threeSectionFillerStyles.rightFillerStyle]} />
+            <View style={[style.current.rightFiller, threeSectionFillerStyles.rightFillerStyle]}/>
           </View>
         );
       }
@@ -612,8 +612,8 @@ const PeriodDay = (props: PeriodDayProps) => {
       // Single period: render 2-section layout (original)
       return (
         <View style={[style.current.fillers, threeSectionFillerStyles.fillerStyle]}>
-          <View style={[style.current.leftFiller, threeSectionFillerStyles.leftFillerStyle]} />
-          <View style={[style.current.rightFiller, threeSectionFillerStyles.rightFillerStyle]} />
+          <View style={[style.current.leftFiller, threeSectionFillerStyles.leftFillerStyle]}/>
+          <View style={[style.current.rightFiller, threeSectionFillerStyles.rightFillerStyle]}/>
         </View>
       );
     }

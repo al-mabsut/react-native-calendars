@@ -147,7 +147,7 @@ const Marking = (props: MarkingProps) => {
     if (endingDay) {
       styles.push(style.current.endingDay);
     }
-    return <View key={index} style={styles} />;
+    return <View key={index} style={styles}/>;
   };
 
   const renderDot = (index?: number, item?: any) => {

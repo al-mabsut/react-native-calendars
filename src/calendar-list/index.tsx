@@ -125,6 +125,9 @@ const CalendarList = (props: CalendarListProps & ContextProp, ref: any) => {
   const calendarProps = extractCalendarProps(props);
   const headerProps = extractHeaderProps(props);
   const calendarSize = horizontal ? calendarWidth : calendarHeight;
+  // Single source of truth for FlatList "item size" math (layout, scrolling, snapping).
+  // Keep any per-item size usage aligned to this to avoid drift.
+  const listItemSize = calendarSize + itemLayoutOffset;
   const shouldUseStaticHeader = staticHeader && horizontal;
 
   const [currentMonth, setCurrentMonth] = useState(parseDate(current));
@@ -193,7 +196,7 @@ const CalendarList = (props: CalendarListProps & ContextProp, ref: any) => {
   const scrollToDay = (date: XDate | string, offset: number, animated: boolean) => {
     const scrollTo = parseDate(date);
     const diffMonths = Math.round(initialDate?.current?.clone().setDate(1).diffMonths(scrollTo?.clone().setDate(1)));
-    let scrollAmount = calendarSize * pastScrollRange + diffMonths * calendarSize + (offset || 0);
+    let scrollAmount = listItemSize * pastScrollRange + diffMonths * listItemSize + (offset || 0);
 
     if (!horizontal) {
       let week = 0;
@@ -216,13 +219,13 @@ const CalendarList = (props: CalendarListProps & ContextProp, ref: any) => {
     (date: XDate | string) => {
       const scrollTo = parseDate(date);
       const diffMonths = Math.round(initialDate?.current?.clone().setDate(1).diffMonths(scrollTo?.clone().setDate(1)));
-      const scrollAmount = calendarSize * (shouldFixRTL ? pastScrollRange - diffMonths : pastScrollRange + diffMonths);
+      const scrollAmount = listItemSize * (shouldFixRTL ? pastScrollRange - diffMonths : pastScrollRange + diffMonths);
 
       if (scrollAmount !== 0) {
         list?.current?.scrollToOffset({offset: scrollAmount, animated: animateScroll});
       }
     },
-    [calendarSize, shouldFixRTL, pastScrollRange, animateScroll]
+    [listItemSize, shouldFixRTL, pastScrollRange, animateScroll]
   );
 
   const addMonth = useCallback(
@@ -250,13 +253,16 @@ const CalendarList = (props: CalendarListProps & ContextProp, ref: any) => {
     [markedDates]
   );
 
-  const getItemLayout = useCallback((_: ArrayLike<XDate> | undefined | null, index: number) => {
-    return {
-      length: calendarSize + itemLayoutOffset,
-      offset: (calendarSize + itemLayoutOffset) * index,
-      index
-    };
-  }, []);
+  const getItemLayout = useCallback(
+    (_: ArrayLike<XDate> | undefined | null, index: number) => {
+      return {
+        length: listItemSize,
+        offset: listItemSize * index,
+        index
+      };
+    },
+    [listItemSize]
+  );
 
   const isDateInRange = useCallback(
     date => {
@@ -295,7 +301,18 @@ const CalendarList = (props: CalendarListProps & ContextProp, ref: any) => {
         />
       );
     },
-    [horizontal, calendarStyle, calendarWidth, testID, getMarkedDatesForItem, isDateInRange, calendarProps]
+    [
+      horizontal,
+      calendarStyle,
+      calendarWidth,
+      calendarHeight,
+      testID,
+      onHeaderLayout,
+      scrollToMonth,
+      getMarkedDatesForItem,
+      isDateInRange,
+      calendarProps
+    ]
   );
 
   const renderStaticHeader = () => {
@@ -366,7 +383,7 @@ const CalendarList = (props: CalendarListProps & ContextProp, ref: any) => {
         onLayout={onLayout}
         removeClippedSubviews={removeClippedSubviews}
         {...(numberOfItemsInSnapToInterval !== undefined
-          ? {snapToInterval: calendarHeight * numberOfItemsInSnapToInterval}
+          ? {snapToInterval: listItemSize * numberOfItemsInSnapToInterval}
           : {})}
         {...(decelerationRate !== undefined ? {decelerationRate: decelerationRate} : {})}
         pagingEnabled={pagingEnabled}
