@@ -254,6 +254,9 @@ demo/
 docsRNC/
 .babelrc
 # eslint-rules/
+# Repo-local agent skill metadata
+.agents/
+.cursor/
 # Ship only portal-clean so `yarn portal:clean` works from a Git/npm-packed install; keep other scripts private.
 scripts/*
 !scripts/portal-clean.mjs

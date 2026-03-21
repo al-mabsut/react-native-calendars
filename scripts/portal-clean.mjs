@@ -27,6 +27,9 @@ console.log(
     '- .pnp.cjs / .pnp.loader.mjs (if present)',
     '',
     'Portal invariant: keep this repo free of node_modules/ while consumed via Yarn portal:.',
+    '',
+    'Maintainer note: after portal:clean, local commands like `yarn lint`, `yarn test`, and `yarn build` in this clone will fail until you run `yarn` again.',
+    'Use a separate maintainer clone/worktree if you need local install tooling without breaking portal mode in the linked app.',
   ].join('\n')
 );
 

@@ -73,5 +73,13 @@ must(
   'packed tarball must not contain node_modules/'
 );
 
+const forbiddenPackPrefixes = ['package/.agents/', 'package/.cursor/'];
+for (const prefix of forbiddenPackPrefixes) {
+  must(
+    !lines.some((l) => l.startsWith(prefix)),
+    `packed tarball must not contain repo-local metadata: ${prefix}`
+  );
+}
+
 fs.unlinkSync(tgzPath);
 console.log('[verify-package-shape] OK — npm pack contains required entries and metadata checks passed.');

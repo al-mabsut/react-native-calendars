@@ -133,7 +133,7 @@ export default class Agenda extends Component<AgendaProps, State> {
             date?: DateData | undefined;
         }> | null | undefined> | undefined;
         state?: React.Validator<import("../types").DayState | null | undefined> | undefined;
-        marking?: React.Validator<import("../calendar/day/marking").MarkingProps | null | undefined> | undefined;
+        marking?: React.Validator<import("..").MarkingProps | null | undefined> | undefined;
         markingType?: React.Validator<import("../types").MarkingTypes | null | undefined> | undefined;
         onPress?: React.Validator<((date?: DateData | undefined) => void) | null | undefined> | undefined;
         onLongPress?: React.Validator<((date?: DateData | undefined) => void) | null | undefined> | undefined;

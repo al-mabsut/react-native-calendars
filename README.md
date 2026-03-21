@@ -86,6 +86,7 @@ If you consume this repo via Yarn `portal:` (symlinked live-edit), Metro will bu
 
 - The fork directory **must not** contain `node_modules/` while used via `portal:` (otherwise Node/TS can resolve `react` / `@types/react` from inside the fork and create runtime + type-identity duplication).
 - You **must not** run `yarn install` inside the fork as part of the portal workflow.
+- Consequence: after `yarn portal:clean`, local maintainer commands in **this clone** such as `yarn lint`, `yarn test`, and `yarn build` will fail until you reinstall dependencies with `yarn`.
 
 ### Setup (consumer app)
 
@@ -145,6 +146,7 @@ config.resolver = {
 - `yarn build` — refresh `lib/**` + declarations from `src/**`.
 - `yarn verify:package` — confirms `package.json` fields and `npm pack` contents (includes `src/`, `lib/`, `scripts/portal-clean.mjs`).
 - `yarn portal:clean` — run **in the fork** before linking with `portal:` so the fork has no `node_modules` (avoids duplicate React / wrong `@types`).
+- If you need both workflows at once, keep this portal-linked clone clean and use a **separate maintainer clone/worktree** with `yarn install` for local lint/test/build.
 
 ## Usage 🚀
 

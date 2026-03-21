@@ -142,6 +142,7 @@ const ExpandableCalendar = forwardRef<ExpandableCalendarRef, ExpandableCalendarP
   } = props;
 
   const [screenReaderEnabled, setScreenReaderEnabled] = useState(false);
+  const screenReaderEnabledRef = useRef(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   const onHeaderLayout = useCallback(({nativeEvent: {layout: {height}}}: LayoutChangeEvent) => {
       setHeaderHeight(height || DEFAULT_HEADER_HEIGHT);
@@ -305,7 +306,11 @@ const ExpandableCalendar = forwardRef<ExpandableCalendarRef, ExpandableCalendarP
   }, []);
 
   const handleScreenReaderStatus = (screenReaderEnabled: any) => {
-    setScreenReaderEnabled(screenReaderEnabled);
+    const nextValue = Boolean(screenReaderEnabled);
+    if (screenReaderEnabledRef.current !== nextValue) {
+      screenReaderEnabledRef.current = nextValue;
+      setScreenReaderEnabled(nextValue);
+    }
   };
 
   /** Scroll */

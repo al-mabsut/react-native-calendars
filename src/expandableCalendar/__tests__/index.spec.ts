@@ -1,3 +1,4 @@
+import {act} from '@testing-library/react-native';
 import {ExpandableCalendarProps, Positions} from '../index';
 import {toMarkingFormat, xdateToData} from '../../interface';
 import {ExpandableCalendarDriver} from '../driver';
@@ -40,6 +41,12 @@ const TestCase = ({
 };
 
 let driver = new ExpandableCalendarDriver(testIdExpandableCalendar, TestCase());
+
+const flushTimers = () => {
+  act(() => {
+    jest.runAllTimers();
+  });
+};
 
 describe('ExpandableCalendar', () => {
   beforeEach(() => {
@@ -110,25 +117,25 @@ describe('ExpandableCalendar', () => {
 
     it('should expand expandable header ', () => {
       driver.toggleKnob();
-      jest.runAllTimers();
+        flushTimers();
 
       expect(driver.isCalendarExpanded()).toBe(true);
     });
 
     it('should day press close expandable header', () => {
       driver.toggleKnob();
-      jest.runAllTimers();
+        flushTimers();
       driver.selectDay(dashedToday);
-      jest.runAllTimers();
+        flushTimers();
       expect(driver.isCalendarExpanded()).toBe(false);
     });
 
     it('should not close expandable header on day press when closeOnDayPress is false', () => {
       const driver = new ExpandableCalendarDriver(testIdExpandableCalendar, TestCase({expandableCalendarProps: {closeOnDayPress: false}}));
       driver.toggleKnob();
-      jest.runAllTimers();
+        flushTimers();
       driver.selectDay(dashedToday);
-      jest.runAllTimers();
+        flushTimers();
       expect(driver.isCalendarExpanded()).toBe(true);
     });
   });
@@ -140,7 +147,7 @@ describe('ExpandableCalendar', () => {
 
     it('should be closed when numberOfDays is defined (> 0) ', () => {
       const driver = new ExpandableCalendarDriver(testIdExpandableCalendar, TestCase({calendarContextProps: {numberOfDays: 3}, expandableCalendarProps: {initialPosition: Positions.OPEN}}));
-      jest.runAllTimers();
+        flushTimers();
       expect(driver.isCalendarExpanded()).toBe(false);
     });
 
@@ -182,7 +189,7 @@ describe('ExpandableCalendar', () => {
       });
       it.each([[Direction.LEFT],[Direction.RIGHT]])(`should call onDateChanged and onMonthChanged to next month first day when pressing the %s arrow`, (direction: Direction) => {
         driver.toggleKnob();
-        jest.runAllTimers();
+        flushTimers();
         const expectedDate = today.clone().setDate(1).addMonths(direction === Direction.RIGHT ? 1 : -1);
         driver.pressOnHeaderArrow({left: direction === Direction.LEFT});
         expect(onDateChanged).toHaveBeenCalledWith(toMarkingFormat(expectedDate), UpdateSources.PAGE_SCROLL);
@@ -191,11 +198,11 @@ describe('ExpandableCalendar', () => {
 
       it(`should call onDateChanged and onMonthChanged for first day in initial month when changing to initial month`, () => {
         driver.toggleKnob();
-        jest.runAllTimers();
+        flushTimers();
         driver.pressOnHeaderArrow({left: false});
-        jest.runAllTimers();
+        flushTimers();
         driver.pressOnHeaderArrow({left: true});
-        jest.runAllTimers();
+        flushTimers();
         const expectedDate = today.clone().setDate(1);
         expect(onDateChanged).toHaveBeenNthCalledWith(2, toMarkingFormat(expectedDate), UpdateSources.PAGE_SCROLL);
         expect(onMonthChange).toHaveBeenNthCalledWith(2, xdateToData(expectedDate), UpdateSources.PAGE_SCROLL);
@@ -203,16 +210,16 @@ describe('ExpandableCalendar', () => {
 
       it(`should navigate 6 months ahead and back successfully`, () => {
         driver.toggleKnob();
-        jest.runAllTimers();
+        flushTimers();
         times(6, () => {
           driver.pressOnHeaderArrow({left: false});
         });
-        jest.runAllTimers();
+        flushTimers();
         const expectedFutureDate = today.clone().setDate(1).addMonths(6);
         expect(onDateChanged).toHaveBeenNthCalledWith(6, toMarkingFormat(expectedFutureDate), UpdateSources.PAGE_SCROLL);
         expect(onMonthChange).toHaveBeenNthCalledWith(6, xdateToData(expectedFutureDate), UpdateSources.PAGE_SCROLL);
         times(6, () => driver.pressOnHeaderArrow({left: true}));
-        jest.runAllTimers();
+        flushTimers();
         const expectedDate = today.clone().setDate(1);
         expect(onDateChanged).toHaveBeenNthCalledWith(12, toMarkingFormat(expectedDate), UpdateSources.PAGE_SCROLL);
         expect(onMonthChange).toHaveBeenNthCalledWith(12, xdateToData(expectedDate), UpdateSources.PAGE_SCROLL);
@@ -266,9 +273,14 @@ describe('ExpandableCalendar', () => {
       });
 
       it('should call onMonthChange when new week first day is in a different month', () => {
-        const endOfMonth = new XDate(today.getFullYear(), today.getMonth() + 1, 0, 0, 0 ,0 , 0, true);
-        const diff = Math.ceil(((endOfMonth.getUTCDate() + 1) - today.getUTCDate()) / 7) + ((today.getUTCDay() > endOfMonth.getUTCDay()) ? 1 : 0);
-        const expectedDate = today.clone().setDate(today.getDate() + 7 * diff - today.getDay());
+        let diff = 1;
+        let expectedDate = today.clone().setDate(today.getDate() + 7 * diff - today.getDay());
+
+        while (expectedDate.getMonth() === today.getMonth()) {
+          diff += 1;
+          expectedDate = today.clone().setDate(today.getDate() + 7 * diff - today.getDay());
+        }
+
         times(diff, () => driver.pressOnHeaderArrow({left: false}));
         expect(onMonthChange).toHaveBeenCalledWith(xdateToData(expectedDate), UpdateSources.PAGE_SCROLL);
       });
