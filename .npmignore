@@ -254,11 +254,12 @@ demo/
 docsRNC/
 .babelrc
 # eslint-rules/
-scripts/
+# Ship only portal-clean so `yarn portal:clean` works from a Git/npm-packed install; keep other scripts private.
+scripts/*
+!scripts/portal-clean.mjs
 
 # Typescript
-# ignore the .ts files
-*.ts
-*.tsx
-# include the .d.ts files
-!*.d.ts 
+# NOTE: we intentionally ship `src/**/*.ts(x)` so Metro can bundle sources when
+# the package is consumed via Yarn `portal:` (live-edit symlink) or via GitHub.
+# Keep `.d.ts` included as well.
+!*.d.ts

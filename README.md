@@ -62,6 +62,90 @@ $ yarn add react-native-calendars
 
 **RN Calendars is implemented in JavaScript, so no native module linking is required.**
 
+## Consumption modes (pick one)
+
+| Mode | Dependency form | What runs in Metro | What Node/TS/Jest resolve | When you run `yarn build` in the fork |
+|------|-----------------|--------------------|---------------------------|----------------------------------------|
+| **GitHub / git URL** | `"react-native-calendars": "https://github.com/al-mabsut/react-native-calendars.git#development"` | `src/**` via the `react-native` field | `lib/**` via `main` / `types` | Only when you change the public TS API or need fresh `lib` for non-Metro tooling |
+| **Yarn `portal:`** | `"react-native-calendars": "portal:/absolute/path/to/fork"` | `src/**` (live edits) | `lib/**` from the fork | Same as GitHub mode |
+| **Maintainer** | N/A (you clone this repo) | Example app / local testing | Local `lib` after `yarn build` | After source changes that affect emitted JS or `.d.ts` |
+
+Invariant for **portal:** and **GitHub** consumers: the app owns `react` and `react-native` singletons; this package lists them as **peerDependencies** only.
+
+---
+
+## Using Yarn `portal:` (live-edit, no rebuild)
+
+If you consume this repo via Yarn `portal:` (symlinked live-edit), Metro will bundle from source because this package exports:
+
+- `react-native`: `src/index.ts` (Metro entry, live-edit)
+- `main`: `lib/index.js` (non-RN / tooling)
+- `types`: `lib/index.d.ts` (TypeScript declarations)
+
+### Portal invariants (non-negotiable)
+
+- The fork directory **must not** contain `node_modules/` while used via `portal:` (otherwise Node/TS can resolve `react` / `@types/react` from inside the fork and create runtime + type-identity duplication).
+- You **must not** run `yarn install` inside the fork as part of the portal workflow.
+
+### Setup (consumer app)
+
+In your consumer app `package.json`, set:
+
+```json
+{
+  "dependencies": {
+    "react-native-calendars": "portal:/Users/ajwah/al-mabsut/react-native-calendars"
+  }
+}
+```
+
+Then ensure the fork is clean and install from the app:
+
+```sh
+cd /Users/ajwah/al-mabsut/react-native-calendars && yarn portal:clean
+cd /Users/ajwah/al-mabsut/myhayd-app && yarn install
+```
+
+### Expo/Metro note (symlinked portals)
+
+If your Metro project root is the app directory (common with Expo), a `portal:` target that lives *outside* the app directory may require enabling symlink support + forcing module resolution through the app's `node_modules`.
+
+Example `metro.config.js` additions:
+
+```js
+const path = require("path");
+
+config.watchFolders = [
+  ...(config.watchFolders ?? []),
+  path.resolve(__dirname, "..", "react-native-calendars"),
+];
+
+config.resolver = {
+  ...config.resolver,
+  unstable_enableSymlinks: true,
+  disableHierarchicalLookup: true,
+  nodeModulesPaths: [path.resolve(__dirname, "node_modules")],
+};
+```
+
+### What is live vs what requires a build (types)
+
+- Runtime edits in `src/**` are **live** (Metro bundles `src/`).
+- Exported type changes require a fork build because `types` points at `lib/index.d.ts` (the `tsc` output).
+  If you change the public TS API, run `yarn build` in this repo to regenerate `lib/` (JS + `.d.ts`).
+
+### Jest / TypeScript in the consumer app
+
+- **Jest** usually resolves `react-native-calendars` through `main` → `lib/index.js`. If you mock the package, point mocks at the same entry your test environment uses.
+- **TypeScript** uses `types` → `lib/index.d.ts`. Symlinked `portal:` installs are fine if the fork’s `lib/**` is up to date for the API you import.
+- After changing **types or `lib` exports**, run `yarn build` in this repo, then refresh the app workspace.
+
+### Maintainer checklist
+
+- `yarn build` — refresh `lib/**` + declarations from `src/**`.
+- `yarn verify:package` — confirms `package.json` fields and `npm pack` contents (includes `src/`, `lib/`, `scripts/portal-clean.mjs`).
+- `yarn portal:clean` — run **in the fork** before linking with `portal:` so the fork has no `node_modules` (avoids duplicate React / wrong `@types`).
+
 ## Usage 🚀
 
 Basic usage examples of the library

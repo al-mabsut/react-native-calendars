@@ -2,7 +2,7 @@
   // "extends": "@react-native/typescript-config/tsconfig.json",
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "commonjs",
     "esModuleInterop": true,
     "moduleResolution": "node",
     "jsx": "react-native",

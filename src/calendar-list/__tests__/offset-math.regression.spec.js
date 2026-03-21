@@ -50,8 +50,6 @@ describe('CalendarList offset math regression', () => {
       expect(mockScrollToOffset).toHaveBeenCalledTimes(1);
     });
 
-    // Expected correct behavior: use full item size from getItemLayout()
-    // (this assertion is intentionally red until the production bug is fixed)
     expect(mockScrollToOffset).toHaveBeenCalledWith({offset: 48 * (300 + 12), animated: false});
   });
 
@@ -86,8 +84,6 @@ describe('CalendarList offset math regression', () => {
       expect(mockScrollToOffset).toHaveBeenCalledTimes(2);
     });
 
-    // Expected correct behavior: month index is pastScrollRange + 3
-    // (this assertion is intentionally red until the production bug is fixed)
     expect(mockScrollToOffset.mock.calls[1][0]).toEqual({offset: 51 * (300 + 12), animated: false});
   });
 
