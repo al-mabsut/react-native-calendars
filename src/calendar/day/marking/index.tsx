@@ -1,6 +1,6 @@
 import filter from 'lodash/filter';
 import React, {useRef} from 'react';
-import {View, ViewStyle, TextStyle, StyleProp} from 'react-native';
+import {View, ViewStyle, TextStyle, StyleProp, ColorValue} from 'react-native';
 
 import {Theme, MarkingTypes} from '../../../types';
 import {extractDotProps} from '../../../componentUpdater';
@@ -98,6 +98,8 @@ export interface MarkingProps extends DotProps {
 
   // InProgress Image Position
   inProgressImagePosition?: InProgressImagePositions;
+  // Tints the in-progress stripes; they draw in their own orange without it.
+  inProgressImageTint?: ColorValue;
   customComponent?: React.ReactNode;
 }
 

@@ -677,7 +677,7 @@ const PeriodDay = (props: PeriodDayProps) => {
                     ? '33%'
                     : '50%',
                 height: '100%',
-                shadowColor: '#fff',
+                tintColor: marking?.inProgressImageTint,
                 position: 'absolute',
                 top: marking?.borderWith || 0.7,
                 left:
