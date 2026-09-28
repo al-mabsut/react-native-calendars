@@ -1,5 +1,5 @@
 import React from 'react';
-import { ViewStyle, TextStyle, StyleProp } from 'react-native';
+import { ViewStyle, TextStyle, StyleProp, ColorValue } from 'react-native';
 import { Theme, MarkingTypes } from '../../../types';
 import { DotProps } from '../dot';
 export declare enum Markings {
@@ -72,6 +72,7 @@ export interface MarkingProps extends DotProps {
     accessibilityLabel?: string;
     customStyles?: CustomStyle;
     inProgressImagePosition?: InProgressImagePositions;
+    inProgressImageTint?: ColorValue;
     customComponent?: React.ReactNode;
 }
 declare const Marking: {
