@@ -47,6 +47,37 @@ type ThreeSectionFillerStyles = {
   fillerStyle: ViewStyle;
 };
 
+/**
+ * The in-progress stripes take the rounded corners of the section they fill,
+ * so they stop at a period's rounded start or end instead of showing past it.
+ */
+const stripeCorners = (marking: MarkingProps): ViewStyle => {
+  const radius = marking.borderRadius || 9;
+  const left = {borderTopLeftRadius: radius, borderBottomLeftRadius: radius};
+  const right = {borderTopRightRadius: radius, borderBottomRightRadius: radius};
+  switch (marking.inProgressImagePosition) {
+    // Three rulings: an ending period, a single day, a starting period.
+    case InProgressImagePositions.left:
+      return right;
+    case InProgressImagePositions.middle:
+      return {...left, ...right};
+    case InProgressImagePositions.right:
+      return left;
+    // Two rulings: the left one ends here, the right one starts here.
+    case InProgressImagePositions.fullLeft:
+      return marking.leftSectionIsSingleDay ? {...left, ...right} : right;
+    case InProgressImagePositions.fullRight:
+      return marking.rightSectionIsSingleDay ? {...left, ...right} : left;
+    // One ruling, or a two-ruling day drawn whole.
+    case InProgressImagePositions.full:
+      return marking.isMultiPeriod
+        ? {}
+        : {...(marking.startingDay ? left : {}), ...(marking.endingDay ? right : {})};
+    default:
+      return {};
+  }
+};
+
 const PeriodDay = (props: PeriodDayProps) => {
   const {
     theme,
@@ -688,17 +719,7 @@ const PeriodDay = (props: PeriodDayProps) => {
                     : 0,
                 zIndex: 1
               },
-              marking?.inProgressImagePosition === InProgressImagePositions.left
-                ? {
-                    borderBottomRightRadius: marking?.borderRadius || 9,
-                    borderTopRightRadius: marking?.borderRadius || 9
-                  }
-                : marking?.inProgressImagePosition === InProgressImagePositions.right
-                ? {
-                    borderBottomLeftRadius: marking?.borderRadius || 9,
-                    borderTopLeftRadius: marking?.borderRadius || 9
-                  }
-                : {}
+              stripeCorners(marking)
             ]}
           />
         )}
